@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Executive Job Search Dashboard — Nanda Dudala</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --navy: #0D2137;
+  --dark-blue: #1B3A5C;
+  --accent: #3B82F6;
+  --gold: #F59E0B;
+  --green: #10B981;
+  --red: #EF4444;
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-500: #6B7280;
+  --gray-700: #374151;
+  --gray-900: #111827;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--gray-50); color: var(--gray-900); }
+.header { background: linear-gradient(135deg, var(--navy) 0%, var(--dark-blue) 100%); color: white; padding: 24px 32px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.header-sub { font-size: 13px; opacity: 0.7; }
+.header-stats { display: flex; gap: 24px; margin-top: 12px; flex-wrap: wrap; }
+.stat { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 16px; text-align: center; min-width: 100px; }
+.stat-num { font-size: 24px; font-weight: 700; }
+.stat-label { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
+.controls { padding: 16px 32px; background: white; border-bottom: 1px solid var(--gray-200); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; position: sticky; top: 94px; z-index: 99; }
+.search-box { flex: 1; min-width: 200px; padding: 10px 16px; border: 2px solid var(--gray-200); border-radius: 8px; font-size: 14px; transition: border-color 0.2s; }
+.search-box:focus { outline: none; border-color: var(--accent); }
+.filter-btn { padding: 8px 16px; border: 2px solid var(--gray-200); border-radius: 8px; background: white; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+.filter-btn:hover { border-color: var(--accent); background: #EFF6FF; }
+.filter-btn.active { border-color: var(--accent); background: var(--accent); color: white; }
+.sort-select { padding: 8px 12px; border: 2px solid var(--gray-200); border-radius: 8px; font-size: 13px; background: white; cursor: pointer; }
+.main { padding: 24px 32px; }
+.tab-bar { display: flex; gap: 4px; margin-bottom: 20px; background: var(--gray-100); padding: 4px; border-radius: 10px; width: fit-content; }
+.tab { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--gray-500); transition: all 0.2s; }
+.tab:hover { color: var(--gray-700); }
+.tab.active { background: white; color: var(--navy); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.job-grid { display: grid; gap: 16px; }
+.job-card { background: white; border-radius: 12px; border: 2px solid var(--gray-200); padding: 20px; transition: all 0.25s; cursor: pointer; position: relative; overflow: hidden; }
+.job-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(59,130,246,0.12); transform: translateY(-1px); }
+.job-card.high-priority { border-left: 5px solid var(--gold); }
+.job-card.strong-fit { border-left: 5px solid var(--green); }
+.job-card.good-fit { border-left: 5px solid var(--accent); }
+.job-card.applied { opacity: 0.85; }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.card-company { font-size: 13px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; }
+.card-score { display: flex; align-items: center; gap: 6px; }
+.score-badge { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: white; }
+.score-high { background: linear-gradient(135deg, #F59E0B, #D97706); }
+.score-strong { background: linear-gradient(135deg, #10B981, #059669); }
+.score-good { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+.card-title { font-size: 17px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px; line-height: 1.3; }
+.card-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.meta-item { font-size: 13px; color: var(--gray-500); display: flex; align-items: center; gap: 4px; }
+.card-reason { font-size: 13px; color: var(--gray-700); line-height: 1.5; margin-bottom: 14px; }
+.card-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.status-select { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; appearance: none; -webkit-appearance: none; }
+.status-not-applied { background: var(--gray-100); color: var(--gray-500); }
+.status-applied { background: #DBEAFE; color: #1D4ED8; }
+.status-interviewing { background: #FEF3C7; color: #92400E; }
+.status-offer { background: #D1FAE5; color: #065F46; }
+.status-rejected { background: #FEE2E2; color: #991B1B; }
+.status-withdrawn { background: #F3F4F6; color: #6B7280; text-decoration: line-through; }
+.action-btn { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--gray-200); background: white; cursor: pointer; transition: all 0.2s; }
+.action-btn:hover { background: var(--gray-50); border-color: var(--accent); }
+.action-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.action-btn.primary:hover { background: #2563EB; }
+.new-badge { position: absolute; top: 12px; right: 12px; background: var(--red); color: white; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+/* Detail panel */
+.detail-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; opacity: 0; transition: opacity 0.3s; }
+.detail-overlay.show { display: block; opacity: 1; }
+.detail-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 640px; max-width: 90vw; background: white; z-index: 201; overflow-y: auto; transform: translateX(100%); transition: transform 0.3s ease; box-shadow: -4px 0 24px rgba(0,0,0,0.15); }
+.detail-panel.show { transform: translateX(0); }
+.detail-header { background: linear-gradient(135deg, var(--navy), var(--dark-blue)); color: white; padding: 24px; position: sticky; top: 0; z-index: 1; }
+.detail-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+.detail-body { padding: 24px; }
+.detail-section { margin-bottom: 24px; }
+.detail-section h3 { font-size: 14px; font-weight: 700; color: var(--dark-blue); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--gray-200); }
+.detail-section p, .detail-section pre { font-size: 14px; line-height: 1.7; color: var(--gray-700); white-space: pre-wrap; }
+.detail-section .highlight { background: #FEF3C7; padding: 12px 16px; border-radius: 8px; border-left: 4px solid var(--gold); }
+.notes-area { width: 100%; min-height: 80px; padding: 12px; border: 2px solid var(--gray-200); border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; }
+.notes-area:focus { outline: none; border-color: var(--accent); }
+/* Status dropdown */
+.status-dropdown { position: relative; display: inline-block; }
+.status-menu { position: absolute; top: 100%; left: 0; background: white; border: 1px solid var(--gray-200); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 50; display: none; min-width: 160px; overflow: hidden; }
+.status-menu.show { display: block; }
+.status-option { padding: 10px 16px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.status-option:hover { background: var(--gray-50); }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot-not-applied { background: var(--gray-300); }
+.dot-applied { background: #3B82F6; }
+.dot-interviewing { background: #F59E0B; }
+.dot-offer { background: #10B981; }
+.dot-rejected { background: #EF4444; }
+.dot-withdrawn { background: #9CA3AF; }
+/* Export bar */
+.export-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--gray-200); padding: 12px 32px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+.export-bar span { font-size: 13px; color: var(--gray-500); }
+.export-btn { padding: 10px 20px; background: var(--navy); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.export-btn:hover { background: var(--dark-blue); }
+@media (max-width: 768px) {
+  .header, .controls, .main { padding-left: 16px; padding-right: 16px; }
+  .detail-panel { width: 100vw; }
+  .header-stats { gap: 8px; }
+}
+.empty-state { text-align: center; padding: 60px 20px; color: var(--gray-500); }
+.empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--gray-700); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Executive Job Search Dashboard</h1>
+  <div class="header-sub">Nanda Dudala — VP Finance & Technology Product Leader</div>
+  <div class="header-stats" id="stats"></div>
+</div>
+
+<div class="controls">
+  <input type="text" class="search-box" id="searchBox" placeholder="Search jobs, companies, locations...">
+  <div style="display:flex;gap:4px;flex-wrap:wrap;">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="not-applied">Not Applied</button>
+    <button class="filter-btn" data-filter="applied">Applied</button>
+    <button class="filter-btn" data-filter="interviewing">Interviewing</button>
+    <button class="filter-btn" data-filter="offer">Offer</button>
+    <button class="filter-btn" data-filter="new">New</button>
+  </div>
+  <select class="sort-select" id="sortSelect">
+    <option value="score-desc">Fit Score: High → Low</option>
+    <option value="score-asc">Fit Score: Low → High</option>
+    <option value="company">Company A-Z</option>
+    <option value="salary">Salary: High → Low</option>
+    <option value="date">Newest First</option>
+  </select>
+</div>
+
+<div class="main" style="padding-bottom: 80px;">
+  <div class="tab-bar">
+    <div class="tab active" data-tab="all-jobs">All Opportunities</div>
+    <div class="tab" data-tab="target-companies">Target Companies</div>
+    <div class="tab" data-tab="pipeline">My Pipeline</div>
+  </div>
+  <div class="job-grid" id="jobGrid"></div>
+</div>
+
+<div class="export-bar">
+  <span id="lastSaved">Changes auto-saved locally</span>
+  <div style="display:flex;gap:8px;">
+    <button class="export-btn" onclick="exportCSV()" style="background:var(--dark-blue);">Export CSV</button>
+    <button class="export-btn" onclick="saveState()">Save Progress</button>
+  </div>
+</div>
+
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header" id="detailHeader">
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
+</div>
+
+<script>
+// ===== JOB DATA =====
+const JOBS = [
+  // CURRENT OPPORTUNITIES (from existing tracker + fresh search)
+  { id: 1, company: "Affirm", title: "Senior Director, Financial Systems", location: "Remote — U.S.", salary: "$285,000–$355,000", remote: "Yes", link: "https://job-boards.greenhouse.io/affirm/jobs/6615012003", score: 95, reason: "PERFECT MATCH. Remote-first fintech. 12+ yrs financial systems, ERP (NetSuite, FloQast, Coupa), SOX. Total comp includes equity + stipends + 100% medical.", discovered: "02/17/2026", source: "general", isNew: false, status: "not-applied", notes: "" },
+  { id: 2, company: "Databricks", title: "Senior Director, Finance Technology", location: "San Francisco, CA (Remote-friendly)", salary: "$250,000–$500,000", remote: "Flexible", link: "https://www.databricks.com/company/careers", score: 92, reason: "Senior director leading financial systems transformation and innovation. Reports to VP Corporate Controller. Pre-IPO equity upside. $250K-$500K range.", discovered: "02/21/2026", source: "general", isNew: true, status: "not-applied", notes: "" },
+  { id: 3, company: "Web3/Fintech (Built In)", title: "Senior Manager, Finance Transformation", location: "Remote", salary: "TBD + equity", remote: "Yes", link: "https://builtin.com/jobs/remote/finance/fintech", score: 92, reason: "AI/blockchain/fintech. Leads finance automation, compliance, team mentorship. Excellent match for finance transformation + AI background.", discovered: "02/17/2026", source: "general", isNew: false, status: "not-applied", notes: "" },
+  { id: 4, company: "Instacart", title: "Senior Director, Financial Systems & Solutions", location: "Remote", salary: "$247,000–$330,000", remote: "Yes", link: "https://remotive.com/remote/jobs/finance/senior-director-financial-systems-solutions-3123839", score: 90, reason: "NEW — Senior director transforming and optimizing financial systems. Remote. Strong match for ERP modernization and finance technology leadership.", discovered: "02/21/2026", source: "general", isNew: true, status: "not-applied", notes: "" },
+  { id: 5, company: "CITCON", title: "Vice President of Finance", location: "Remote / Hybrid — U.S.", salary: "TBD", remote: "Yes", link: "https://builtin.com/jobs/remote/finance?search=VP+Finance", score: 88, reason: "Cross-border payments fintech. Expert/Leader level. Actively hiring. CITCON is a leading global digital payment platform.", discovered: "02/17/2026", source: "general", isNew: false, status: "not-applied", notes: "" },
+  { id: 6, company: "Replicated", title: "Head of Finance (Remote)", location: "Remote — U.S.", salary: "TBD (Series C)", remote: "Yes", link: "https://wellfound.com/jobs/1348525-head-of-finance-remote", score: 88, reason: "Series C enterprise software startup. 3+ yrs finance leader (CFO/VP/Director), 10+ yrs progressive finance, VC fundraising experience.", discovered: "02/17/2026", source: "general", isNew: false, status: "not-applied", notes: "" },
+  { id: 7, company: "Databricks", title: "Director, Finance IT Product Specialist", location: "Remote (US)", salary: "Not disclosed", remote: "Yes", link: "https://www.databricks.com/company/careers/exec-it/director-finance-it-product-specialist-8095230002", score: 88, reason: "Director-level leading vision and strategy for finance technology solutions across OTC, P2P, R2R, FP&A, Treasury, and Payments systems.", discovered: "02/21/2026", source: "general", isNew: true, status: "not-applied", notes: "" },
+  { id: 8, company: "State Street", title: "Finance Technology Lead, VP", location: "Boston, MA (Hybrid)", salary: "$155,000–$230,000", remote: "Hybrid", link: "https://careers.massfintechhub.com/companies/state-street-2/jobs/68249191", score: 85, reason: "VP-level hands-on technology leader guiding engineers and modernizing finance technology platforms at major financial institution.", discovered: "02/21/2026", source: "general", isNew: true, status: "not-applied", notes: "" },
+
+  // TARGET COMPANY ANALYSIS roles
+  { id: 20, company: "Stripe", title: "Head of Business Technology, Finance Systems", location: "San Francisco / Remote", salary: "$232K–$348K + Equity", remote: "Hybrid", link: "https://stripe.com/jobs/listing/head-of-business-technology-finance-systems/6188525", score: 96, reason: "Direct finance systems leadership at top fintech. ERP/financial platform ownership. High comp + equity. Aligns perfectly with Finance & Technology Product Leader profile.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "",
+    strategy: {
+      painPoints: "SCALE PROBLEM: Stripe processes $1T+ in annual payment volume and their finance infrastructure needs to scale proportionally. They're post-IPO-readiness and need a leader who can modernize finance systems (ERP, billing, revenue recognition) to support enterprise-grade financial reporting.\n\nDIGITAL TRANSFORMATION GAP: Finance systems likely fragmented across homegrown tools and legacy platforms. Need someone who can architect a unified financial technology stack while maintaining SOX-level controls at hypergrowth speed.",
+      evp: "Finance technology executive who has architected and scaled enterprise financial systems across $1B+ organizations, reducing close cycles by 40% and eliminating $1.8M+ in annual processing inefficiencies. Proven ability to lead cross-functional transformations spanning ERP modernization, AI-driven automation, and SOX compliance at scale — delivering zero material audit findings while enabling real-time financial intelligence for C-suite decision-making.",
+      bullets: "• Architected enterprise ERP transformation for 400+ users, reducing close cycle by 40% and eliminating $1.8M in annual manual costs\n• Orchestrated AI/ML automation across financial operations, converting 12,000+ hours of manual work into intelligent workflows\n• Quantified and remediated 15+ material control gaps, achieving zero audit findings across 3 consecutive cycles\n• Architected unified financial data platform cutting reporting lag from 14 to 2 days, enabling $50M+ in faster capital decisions",
+      loi: "Dear Hiring Committee,\n\nStripe's finance systems need to operate with the same precision and scale as your payments infrastructure. Having architected financial technology transformations that reduced enterprise close cycles by 40% and automated 65% of manual financial operations, I understand the specific challenge: building systems that maintain audit-grade accuracy while supporting hypergrowth.\n\nMY FIRST 90 DAYS:\nDays 1-30: Audit the current finance technology stack — map every system, integration, and manual workaround. Identify the 3 highest-leverage modernization opportunities.\nDays 31-60: Build the business case and roadmap. Align Finance, Engineering, and Compliance on a phased transformation plan with measurable milestones.\nDays 61-90: Deliver a quick win. Deploy at least one automation or integration that demonstrates immediate ROI.\n\nNanda Dudala",
+      outreachPeer: "Hi [Name] — I'm a VP Finance & Technology Product Leader exploring the Head of Business Technology, Finance Systems role at Stripe. Given your experience there, I'd value a 15-minute conversation about how finance technology priorities are evolving alongside Stripe's enterprise growth. I've led ERP transformations and financial automation at scale. No pressure — happy to share perspectives from my side as well.",
+      outreachHM: "Hi [Name] — I wanted to flag my application for the Head of Business Technology, Finance Systems role. My background: 15+ years architecting financial systems transformations — most recently leading ERP modernization that cut close cycles 40% and AI-driven automation that eliminated $1.8M in annual costs across 400+ users. Would welcome 15 minutes to share how my approach maps to Stripe's current priorities."
+    }
+  },
+  { id: 21, company: "Intuit", title: "Director, Core Finance Systems", location: "Mountain View, CA", salary: "$250K–$350K (est.)", remote: "Hybrid", link: "https://jobs.intuit.com/job/mountain-view/director-core-finance-systems/27595/88387092096", score: 95, reason: "Reports to VP Finance Digital Acceleration. Owns Oracle ERP, Treasury, Tax, Accounting platforms. Direct financial systems transformation role.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "",
+    strategy: {
+      painPoints: "TRANSFORMATION GAP: Intuit is consolidating core finance platforms (Oracle ERP, Treasury, Tax, Accounting) under one product leader. Multiple finance systems likely operating independently, creating reconciliation bottlenecks.\n\nSCALE PROBLEM: As a $180B+ market cap company, Intuit needs finance systems supporting complex multi-product P&L reporting and global treasury operations.",
+      evp: "Financial systems transformation leader who has unified fragmented enterprise platforms across 8+ systems into cohesive financial intelligence ecosystems, reducing reporting cycles from 14 days to 2 days. Track record of owning Oracle ERP, Treasury, and compliance technology at scale.",
+      bullets: "• Architected unified financial data platform consolidating 8+ siloed systems into a single source of truth\n• Orchestrated cross-functional ERP modernization for 400+ users with zero business disruption\n• Pivoted financial operations toward AI-driven automation, eliminating 8,000+ hours of manual processing\n• Quantified and remediated SOX control gaps across 50+ processes with zero findings",
+      loi: "Dear Hiring Committee,\n\nThe Director of Core Finance Systems role signals a critical inflection point: Intuit is ready to unify its financial technology stack into a platform that matches the sophistication of the products you build for 100M+ customers.\n\nMY FIRST 90 DAYS:\nDays 1-30: Map the current state of every core finance system. Identify integration gaps and top 5 pain points.\nDays 31-60: Build a prioritized product roadmap with your VP of Finance Digital Acceleration.\nDays 61-90: Ship the first improvement — create visible momentum.\n\nNanda Dudala",
+      outreachPeer: "Hi [Name] — I'm a Finance & Technology Product Leader evaluating the Director, Core Finance Systems opportunity at Intuit. I've spent 15+ years in financial systems transformation. I'd value 15 minutes to understand how Intuit's Finance Digital Acceleration team approaches internal platform decisions.",
+      outreachHM: "Hi [Name] — Flagging my application for Director, Core Finance Systems. My background: architected the unification of 8+ financial systems into a single platform, cutting reporting lag from 14 days to 2. Led Oracle ERP modernization at enterprise scale with zero audit findings. Would welcome 15 minutes to discuss alignment."
+    }
+  },
+  { id: 22, company: "PayPal", title: "VP, Finance Technology", location: "San Jose, CA / Hybrid", salary: "$280K–$400K (est.)", remote: "Hybrid", link: "https://careers.pypl.com/home/", score: 94, reason: "VP-level finance technology at major payments company. Leads finance tech strategy and digital transformation under new CEO driving efficiency.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "",
+    strategy: {
+      painPoints: "DIGITAL TRANSFORMATION GAP: PayPal's new CEO is driving operational efficiency and platform modernization. Finance technology needs to evolve from cost-center to strategic enabler.\n\nSCALE + INTEGRATION: With $30B+ revenue, finance stack must integrate across payments, lending, crypto, and commerce — consolidating systems from Braintree, Venmo, Honey acquisitions.",
+      evp: "VP-level finance technology executive who has led multi-platform financial systems integration across acquired entities, architecting unified infrastructure that reduced operational costs by 35% and scaled to 10x transaction volume.",
+      bullets: "• Orchestrated financial platform integration and scaling to handle 10x transaction volume growth, reducing processing costs 35%\n• Architected AI-powered financial automation achieving 65% reduction in manual operations\n• Led cross-functional data strategy unifying 8+ systems, enabling $50M+ in accelerated capital allocation\n• Quantified enterprise risk across 50+ control processes, achieving zero material findings",
+      loi: "Dear Hiring Committee,\n\nPayPal's finance technology sits at the intersection of your biggest strategic priority: turning a multi-product payments platform into an operationally efficient, data-driven machine.\n\nMY FIRST 90 DAYS:\nDays 1-30: Map finance technology across PayPal, Braintree, Venmo. Identify integration gaps.\nDays 31-60: Build a consolidated roadmap aligned to the efficiency mandate.\nDays 61-90: Execute the highest-ROI automation project to demonstrate velocity.\n\nNanda Dudala",
+      outreachPeer: "Hi [Name] — I'm a VP Finance & Technology Product Leader evaluating the VP, Finance Technology role at PayPal. I've led financial systems integration across multi-product platforms. Would value a 15-minute conversation about how the function is evolving under new leadership.",
+      outreachHM: "Hi [Name] — Flagging my application for VP, Finance Technology. Background: 15+ years leading finance technology transformations including multi-platform integration that scaled to 10x volume and reduced costs 35%. Would welcome 15 minutes to discuss alignment."
+    }
+  },
+  { id: 23, company: "Coinbase", title: "VP, Tech Risk and Controls", location: "Remote (USA)", salary: "$300K–$400K (est. w/ equity)", remote: "Yes", link: "https://www.coinbase.com/careers/positions/7379271", score: 92, reason: "VP-level remote role at crypto leader. Technology risk and financial controls infrastructure. Strong fintech + remote fit.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "",
+    strategy: {
+      painPoints: "REGULATORY COMPLEXITY: Crypto's regulatory landscape is evolving rapidly. Need VP who can build controls satisfying SEC, CFTC while not strangling product velocity.\n\nCULTURE CHALLENGE: Balancing 'move fast' crypto ethos with 'zero defect' financial controls — need someone who speaks both engineering and compliance.",
+      evp: "Financial controls and technology risk leader who has built enterprise-grade compliance frameworks from the ground up, achieving zero material audit findings across 3 consecutive cycles while reducing compliance costs by 30%.",
+      bullets: "• Orchestrated comprehensive controls redesign across 50+ processes, achieving zero material findings for 3 consecutive audits\n• Architected continuous monitoring framework reducing compliance costs 30%\n• Led AI-driven automation that reduced error rates from 3% to 0.2%\n• Pivoted cross-functional teams toward data-driven risk quantification for board-level reporting",
+      loi: "Dear Hiring Committee,\n\nThe VP of Tech Risk and Controls at Coinbase faces a challenge most regulated companies never encounter: building institutional-grade financial controls for an asset class where the rules are still being written.\n\nMY FIRST 90 DAYS:\nDays 1-30: Assess controls architecture across exchange, custody, staking. Map regulatory obligations.\nDays 31-60: Build risk-prioritized roadmap targeting highest regulatory exposure.\nDays 61-90: Implement one automated control demonstrating 'technology-first compliance.'\n\nNanda Dudala",
+      outreachPeer: "Hi [Name] — I'm a Finance & Technology leader exploring the VP, Tech Risk and Controls role at Coinbase. I've built SOX compliance frameworks from scratch. I'd value 15 minutes to understand how Coinbase balances crypto innovation with institutional-grade controls.",
+      outreachHM: "Hi [Name] — Flagging my application for VP, Tech Risk and Controls. My background: enterprise compliance frameworks achieving zero material findings across 3 consecutive audit cycles while reducing costs 30%. Would welcome 15 minutes to discuss."
+    }
+  },
+  { id: 24, company: "Adyen", title: "VP, Global Head of Professional Services", location: "San Francisco / Chicago", salary: "$280K–$431K + RSUs", remote: "Hybrid", link: "https://careers.adyen.com/vacancies/6987694", score: 91, reason: "VP at global payments platform. Leads enterprise financial integration. High compensation. Strong payments/fintech domain match.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+  { id: 25, company: "Workday", title: "Senior Director, Strategy & Ops - Finance", location: "Remote / Pleasanton, CA", salary: "$260K–$350K (est.)", remote: "Yes", link: "https://workday.wd5.myworkdayjobs.com/Workday", score: 90, reason: "Senior Director at enterprise finance software leader. Finance strategy & transformation. Direct ERP/financial systems expertise valued.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+  { id: 26, company: "Coinbase", title: "Director, Technology Risk", location: "Remote (USA)", salary: "$267K–$315K + Equity", remote: "Yes", link: "https://www.coinbase.com/careers/positions/6328116", score: 89, reason: "Director-level remote role. Technology and security risk management for financial systems. Crypto/fintech alignment.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+  { id: 27, company: "Salesforce", title: "Senior Director, Chief of Staff to Head of Finance", location: "San Francisco / Remote", salary: "$181K–$304K + Equity", remote: "Hybrid", link: "https://careers.salesforce.com", score: 88, reason: "Senior Director at enterprise leader. Strategic finance leadership close to CFO. Strong comp with equity upside.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+  { id: 28, company: "Databricks", title: "Director, Finance IT Product Specialist", location: "Mountain View, CA", salary: "$230K–$320K (est.)", remote: "Hybrid", link: "https://www.databricks.com/company/careers", score: 87, reason: "Director of Finance IT at data/AI unicorn. Finance systems product ownership. High-growth pre-IPO equity.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+  { id: 29, company: "Snowflake", title: "VP, Data Cloud & Technology Partnerships", location: "Menlo Park, CA", salary: "$280K–$400K (est.)", remote: "Hybrid", link: "https://careers.snowflake.com", score: 86, reason: "VP at cloud data leader. Technology partnerships for financial data platforms. Strong data/analytics alignment.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+  { id: 30, company: "ServiceNow", title: "Director, Finance Technology", location: "Santa Clara / Remote", salary: "$220K–$320K (est.)", remote: "Yes", link: "https://careers.servicenow.com", score: 85, reason: "Director at enterprise workflow leader. Finance technology and automation.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+  { id: 31, company: "Block (Square)", title: "Finance & Strategy Senior Manager, Square Banking", location: "San Francisco / Remote", salary: "$220K–$300K (est.)", remote: "Yes", link: "https://block.xyz/careers/jobs/4798615008", score: 84, reason: "CFO-partner role at major fintech. Banking/payments strategy.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+  { id: 32, company: "PayPal", title: "Vice President, Payments Platform", location: "San Jose (Hybrid)", salary: "$213K–$393K", remote: "Hybrid", link: "https://www.talentify.io/job/vice-president-payments-platform---paypal-r0104173", score: 80, reason: "VP-level overseeing Wallet Payments Platform and Instrument Processing Platform. Significant compensation.", discovered: "02/21/2026", source: "general", isNew: true, status: "not-applied", notes: "" },
+  { id: 33, company: "Databricks", title: "Director, GTM Commercialization Finance", location: "Mountain View / Seattle (Remote-friendly)", salary: "$184K–$287K", remote: "Flexible", link: "https://www.databricks.com/company/careers/finance/director-gtm-commercialization-finance-8182381002", score: 78, reason: "Director-level strategic finance role managing GTM commercialization strategy. 10+ yrs FP&A/strategic finance in tech.", discovered: "02/21/2026", source: "general", isNew: true, status: "not-applied", notes: "" },
+  { id: 34, company: "SoFi", title: "Director, 1LOD Third-Party Risk Management", location: "Jacksonville / Utah", salary: "$160K–$275K", remote: "No", link: "https://www.sofi.com/careers/", score: 82, reason: "Director-level risk at growing fintech. Third-party financial risk controls.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+  { id: 35, company: "Ramp", title: "VP Finance / Director of Finance", location: "New York / Remote", salary: "$250K–$350K (est.)", remote: "Yes", link: "https://ramp.com/careers", score: 78, reason: "Active executive finance hiring at fastest-growing fintech. Corporate card/spend management.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+  { id: 36, company: "Robinhood", title: "Director of Fund Accounting", location: "Chicago / Menlo Park / NYC", salary: "$220K–$300K (est.)", remote: "No", link: "https://careers.robinhood.com/", score: 80, reason: "Director at retail investing platform. Fund accounting leadership.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+  { id: 37, company: "Plaid", title: "Financial Systems Lead", location: "Remote (US)", salary: "$134K–$238K", remote: "Yes", link: "https://plaid.com/careers/openings/finance/united-states/financial-systems-lead/", score: 75, reason: "Financial systems leadership managing NetSuite ERP, automation, data integrity. Fintech alignment.", discovered: "02/21/2026", source: "general", isNew: true, status: "not-applied", notes: "" },
+  { id: 38, company: "Brex", title: "Director of Accounting / Finance Operations", location: "San Francisco / Remote", salary: "$230K–$320K (est.)", remote: "Yes", link: "https://www.brex.com/careers", score: 75, reason: "Director at corporate card fintech. Finance operations leadership.", discovered: "02/18/2026", source: "target", isNew: false, status: "not-applied", notes: "" },
+];
+
+// State management
+let state = { jobs: JOBS, activeTab: "all-jobs", activeFilter: "all", searchTerm: "", sortBy: "score-desc" };
+
+function loadState() {
+  try {
+    const saved = window._savedState;
+    if (saved) {
+      saved.forEach(s => {
+        const job = state.jobs.find(j => j.id === s.id);
+        if (job) { job.status = s.status || job.status; job.notes = s.notes || job.notes; }
+      });
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    const data = state.jobs.map(j => ({ id: j.id, status: j.status, notes: j.notes }));
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'job_search_progress.json';
+    a.click();
+    document.getElementById('lastSaved').textContent = 'Progress saved! (' + new Date().toLocaleTimeString() + ')';
+  } catch(e) { alert('Save failed: ' + e.message); }
+}
+
+function exportCSV() {
+  const headers = ['Company','Title','Location','Salary','Remote','Fit Score','Status','Notes','Link','Discovered'];
+  const rows = state.jobs.map(j => [j.company, j.title, j.location, j.salary, j.remote, j.score, j.status, j.notes.replace(/,/g,';'), j.link, j.discovered]);
+  const csv = [headers, ...rows].map(r => r.map(v => '"' + String(v||'').replace(/"/g,'""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Executive_Job_Search_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+function getScoreClass(score) { return score >= 92 ? 'high' : score >= 85 ? 'strong' : 'good'; }
+function getCardClass(score) { return score >= 92 ? 'high-priority' : score >= 85 ? 'strong-fit' : 'good-fit'; }
+
+function updateStats() {
+  const total = state.jobs.length;
+  const applied = state.jobs.filter(j => j.status === 'applied').length;
+  const interviewing = state.jobs.filter(j => j.status === 'interviewing').length;
+  const offers = state.jobs.filter(j => j.status === 'offer').length;
+  const newJobs = state.jobs.filter(j => j.isNew).length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-num">${total}</div><div class="stat-label">Total Jobs</div></div>
+    <div class="stat"><div class="stat-num">${applied}</div><div class="stat-label">Applied</div></div>
+    <div class="stat"><div class="stat-num">${interviewing}</div><div class="stat-label">Interviewing</div></div>
+    <div class="stat"><div class="stat-num">${offers}</div><div class="stat-label">Offers</div></div>
+    <div class="stat" style="border:1px solid rgba(239,68,68,0.3)"><div class="stat-num" style="color:#FCA5A5">${newJobs}</div><div class="stat-label">New Today</div></div>
+  `;
+}
+
+function getFilteredJobs() {
+  let jobs = [...state.jobs];
+  // Tab filter
+  if (state.activeTab === 'target-companies') jobs = jobs.filter(j => j.source === 'target');
+  else if (state.activeTab === 'pipeline') jobs = jobs.filter(j => ['applied','interviewing','offer'].includes(j.status));
+  // Status filter
+  if (state.activeFilter === 'new') jobs = jobs.filter(j => j.isNew);
+  else if (state.activeFilter !== 'all') jobs = jobs.filter(j => j.status === state.activeFilter.replace('-', '-'));
+  // Search
+  if (state.searchTerm) {
+    const q = state.searchTerm.toLowerCase();
+    jobs = jobs.filter(j => j.company.toLowerCase().includes(q) || j.title.toLowerCase().includes(q) || j.location.toLowerCase().includes(q) || j.reason.toLowerCase().includes(q));
+  }
+  // Sort
+  switch(state.sortBy) {
+    case 'score-desc': jobs.sort((a,b) => b.score - a.score); break;
+    case 'score-asc': jobs.sort((a,b) => a.score - b.score); break;
+    case 'company': jobs.sort((a,b) => a.company.localeCompare(b.company)); break;
+    case 'salary': jobs.sort((a,b) => { const sa = parseInt((b.salary||'0').replace(/[^0-9]/g,'')); const sb = parseInt((a.salary||'0').replace(/[^0-9]/g,'')); return sa - sb; }); break;
+    case 'date': jobs.sort((a,b) => b.discovered > a.discovered ? 1 : -1); break;
+  }
+  return jobs;
+}
+
+function renderJobs() {
+  const jobs = getFilteredJobs();
+  const grid = document.getElementById('jobGrid');
+  if (jobs.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><h3>No jobs match your filters</h3><p>Try adjusting your search or filters</p></div>';
+    return;
+  }
+  grid.innerHTML = jobs.map(j => `
+    <div class="job-card ${getCardClass(j.score)} ${j.status !== 'not-applied' ? 'applied' : ''}" onclick="openDetail(${j.id})">
+      ${j.isNew ? '<div class="new-badge">NEW</div>' : ''}
+      <div class="card-top">
+        <div class="card-company">${j.company}</div>
+        <div class="card-score">
+          <div class="score-badge score-${getScoreClass(j.score)}">${j.score}</div>
+        </div>
+      </div>
+      <div class="card-title">${j.title}</div>
+      <div class="card-meta">
+        <span class="meta-item">📍 ${j.location}</span>
+        <span class="meta-item">💰 ${j.salary}</span>
+        ${j.remote === 'Yes' ? '<span class="meta-item">🏠 Remote</span>' : ''}
+      </div>
+      <div class="card-reason">${j.reason.substring(0, 150)}${j.reason.length > 150 ? '...' : ''}</div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <div class="status-dropdown">
+          <button class="status-select status-${j.status}" onclick="toggleStatusMenu(event, ${j.id})">
+            ${formatStatus(j.status)} ▾
+          </button>
+          <div class="status-menu" id="statusMenu-${j.id}">
+            <div class="status-option" onclick="setStatus(${j.id}, 'not-applied')"><span class="status-dot dot-not-applied"></span> Not Applied</div>
+            <div class="status-option" onclick="setStatus(${j.id}, 'applied')"><span class="status-dot dot-applied"></span> Applied</div>
+            <div class="status-option" onclick="setStatus(${j.id}, 'interviewing')"><span class="status-dot dot-interviewing"></span> Interviewing</div>
+            <div class="status-option" onclick="setStatus(${j.id}, 'offer')"><span class="status-dot dot-offer"></span> Offer</div>
+            <div class="status-option" onclick="setStatus(${j.id}, 'rejected')"><span class="status-dot dot-rejected"></span> Rejected</div>
+            <div class="status-option" onclick="setStatus(${j.id}, 'withdrawn')"><span class="status-dot dot-withdrawn"></span> Withdrawn</div>
+          </div>
+        </div>
+        <a href="${j.link}" target="_blank" class="action-btn primary" onclick="event.stopPropagation()">View Posting →</a>
+        ${j.strategy ? '<button class="action-btn" onclick="event.stopPropagation(); openDetail(' + j.id + ')">📋 Strategy Kit</button>' : ''}
+      </div>
+    </div>
+  `).join('');
+  updateStats();
+}
+
+function formatStatus(s) {
+  return { 'not-applied': 'Not Applied', 'applied': 'Applied', 'interviewing': 'Interviewing', 'offer': 'Offer!', 'rejected': 'Rejected', 'withdrawn': 'Withdrawn' }[s] || s;
+}
+
+function toggleStatusMenu(e, id) {
+  e.stopPropagation();
+  document.querySelectorAll('.status-menu').forEach(m => m.classList.remove('show'));
+  document.getElementById('statusMenu-' + id).classList.toggle('show');
+}
+
+function setStatus(id, status) {
+  const job = state.jobs.find(j => j.id === id);
+  if (job) { job.status = status; }
+  document.querySelectorAll('.status-menu').forEach(m => m.classList.remove('show'));
+  renderJobs();
+}
+
+function openDetail(id) {
+  const job = state.jobs.find(j => j.id === id);
+  if (!job) return;
+  const panel = document.getElementById('detailPanel');
+  const overlay = document.getElementById('detailOverlay');
+  document.getElementById('detailHeader').innerHTML = `
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+    <div style="font-size:13px;opacity:0.7;text-transform:uppercase;letter-spacing:1px;">${job.company}</div>
+    <div style="font-size:20px;font-weight:700;margin-top:4px;">${job.title}</div>
+    <div style="margin-top:8px;font-size:14px;opacity:0.8;">📍 ${job.location} · 💰 ${job.salary} · Fit Score: ${job.score}/100</div>
+  `;
+  let body = `
+    <div class="detail-section">
+      <h3>Why This Role Fits</h3>
+      <p>${job.reason}</p>
+    </div>
+    <div class="detail-section">
+      <h3>Application Status</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        ${['not-applied','applied','interviewing','offer','rejected','withdrawn'].map(s =>
+          `<button class="status-select status-${s}" style="cursor:pointer;${job.status===s?'box-shadow:0 0 0 3px var(--accent);':''}" onclick="setStatus(${job.id},'${s}');openDetail(${job.id})">${formatStatus(s)}</button>`
+        ).join('')}
+      </div>
+    </div>
+    <div class="detail-section">
+      <h3>Your Notes</h3>
+      <textarea class="notes-area" placeholder="Add your notes here — interview dates, contacts, follow-ups..." oninput="updateNotes(${job.id}, this.value)">${job.notes}</textarea>
+    </div>
+    <div class="detail-section">
+      <a href="${job.link}" target="_blank" class="action-btn primary" style="display:inline-block;padding:12px 24px;font-size:14px;text-decoration:none;">Open Job Posting →</a>
+    </div>
+  `;
+  if (job.strategy) {
+    body += `
+      <div class="detail-section">
+        <h3>1. Pain-Point Analysis</h3>
+        <div class="highlight"><p>${job.strategy.painPoints}</p></div>
+      </div>
+      <div class="detail-section">
+        <h3>2. Executive Value Proposition (Resume Summary)</h3>
+        <div class="highlight"><p>${job.strategy.evp}</p></div>
+      </div>
+      <div class="detail-section">
+        <h3>3. Strategic Resume Bullets (S-I-R Framework)</h3>
+        <pre>${job.strategy.bullets}</pre>
+      </div>
+      <div class="detail-section">
+        <h3>4. Board-Level Letter of Intent</h3>
+        <pre>${job.strategy.loi}</pre>
+      </div>
+      <div class="detail-section">
+        <h3>5a. Outreach: Peer at Company</h3>
+        <pre>${job.strategy.outreachPeer}</pre>
+        <button class="action-btn" style="margin-top:8px;" onclick="copyText(this, \`${job.strategy.outreachPeer.replace(/`/g,"'")}\`)">Copy Message</button>
+      </div>
+      <div class="detail-section">
+        <h3>5b. Outreach: Hiring Manager / Recruiter</h3>
+        <pre>${job.strategy.outreachHM}</pre>
+        <button class="action-btn" style="margin-top:8px;" onclick="copyText(this, \`${job.strategy.outreachHM.replace(/`/g,"'")}\`)">Copy Message</button>
+      </div>
+    `;
+  } else {
+    body += `<div class="detail-section"><h3>Strategy Kit</h3><p style="color:var(--gray-500);">Strategy analysis available for top-scoring target company roles. Check the "Target Companies" tab for roles with full strategy kits.</p></div>`;
+  }
+  document.getElementById('detailBody').innerHTML = body;
+  panel.classList.add('show');
+  overlay.classList.add('show');
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('show');
+  document.getElementById('detailOverlay').classList.remove('show');
+}
+
+function updateNotes(id, value) {
+  const job = state.jobs.find(j => j.id === id);
+  if (job) job.notes = value;
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy Message', 2000);
+  });
+}
+
+// Event Listeners
+document.getElementById('searchBox').addEventListener('input', e => { state.searchTerm = e.target.value; renderJobs(); });
+document.getElementById('sortSelect').addEventListener('change', e => { state.sortBy = e.target.value; renderJobs(); });
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.activeFilter = btn.dataset.filter;
+    renderJobs();
+  });
+});
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    state.activeTab = tab.dataset.tab;
+    renderJobs();
+  });
+});
+document.addEventListener('click', () => document.querySelectorAll('.status-menu').forEach(m => m.classList.remove('show')));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+// Init
+renderJobs();
+</script>
+</body>
+</html>
