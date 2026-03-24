@@ -122,14 +122,10 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 </div>
 <div id="detailOverlay" class="detail-overlay" onclick="closeDetail()"></div>
 <div id="detailPanel" class="detail-panel">
-  <div id="detailHeader" class="detail-panel-header"></div>
-  <div id="detailBody" class="detail-panel-body"></div>
-</div>
-<script>
-const state = {" id="detailHeader">
+  <div class="detail-panel-header" id="detailHeader">
     <button class="detail-close" onclick="closeDetail()">✕</button>
   </div>
-  <div class="detail-body" id="detailBody"></div>
+  <div class="detail-panel-body" id="detailBody"></div>
 </div>
 
 <script>
